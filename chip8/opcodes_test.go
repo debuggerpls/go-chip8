@@ -1,8 +1,37 @@
 package chip8
 
 import (
+	"fmt"
 	"testing"
 )
+
+type MockDisplay struct {
+	clear, drawbytes int
+	x, y             byte
+}
+
+func (d *MockDisplay) Create() error {
+	return nil
+}
+
+func (d *MockDisplay) Destroy() {
+}
+
+func (d *MockDisplay) Clear() {
+	d.clear += 1
+}
+
+func (d *MockDisplay) Draw(x, y byte, sprite []byte) (collision byte) {
+	d.x = x
+	d.y = y
+	d.drawbytes = len(sprite)
+	collision = 0
+	return
+}
+
+func (d *MockDisplay) String() string {
+	return fmt.Sprintf("x=%d y=%d drawbytes=%d", d.x, d.y, d.drawbytes)
+}
 
 // Test opcode getter functions
 func TestOpFuncs(t *testing.T) {
@@ -30,10 +59,32 @@ func TestOpFuncs(t *testing.T) {
 func TestOpNr0(t *testing.T) {
 	r := Registers{}
 	m := Memory{}
+	d := &MockDisplay{}
 	var opcode uint16 = 0x0000
 
-	if err := OpNr0(opcode, &r, &m); err != nil {
+	if err := OpNr0(opcode, &r, &m, d); err != nil {
 		t.Error(err)
+	}
+
+	opcode = 0x00e0
+	if err := OpNr0(opcode, &r, &m, d); err != nil {
+		t.Error(err)
+	}
+	if d.clear != 1 {
+		t.Errorf("Display was not cleared, clear=%d", d.clear)
+	}
+
+	opcode = 0x00ee
+	r.SP = 1
+	r.Stack[0] = 0xabcd
+	if err := OpNr0(opcode, &r, &m, d); err != nil {
+		t.Error(err)
+	}
+	if r.SP != 0 {
+		t.Errorf("Wrong SP, expected=%02x\n%s", 0, r.String())
+	}
+	if r.PC != 0xabcd {
+		t.Errorf("Wrong PC, expected=%04x\n%s", 0xabcd, r.String())
 	}
 }
 
@@ -339,6 +390,22 @@ func TestOpNrB(t *testing.T) {
 	}
 }
 
+func TestOpNrD(t *testing.T) {
+	r := Registers{}
+	m := Memory{}
+	d := &MockDisplay{}
+
+	var opcode uint16 = 0xd015
+	r.V[0] = 10
+	r.V[1] = 15
+	if err := OpNrD(opcode, &r, &m, d); err != nil {
+		t.Error(err)
+	}
+	if d.x != 10 || d.y != 15 || d.drawbytes != 5 {
+		t.Errorf("Wrong Display state: %s", d.String())
+	}
+}
+
 func TestOpNrF(t *testing.T) {
 	r := Registers{}
 	m := Memory{}
@@ -418,6 +485,16 @@ func TestOpNrF(t *testing.T) {
 	}
 	if r.V[0] != 0xab && r.V[1] != 0xcd && r.V[2] != 0xef {
 		t.Errorf("Wrong V[]\n%s", r.String())
+	}
+
+	opcode = 0xf029
+	r.V[0] = 5
+	r.I = 0
+	if err := OpNrF(opcode, &r, &m); err != nil {
+		t.Error(err)
+	}
+	if r.I != 25 {
+		t.Errorf("Wrong I, expected=%04x\n%s", 25, r.String())
 	}
 
 }

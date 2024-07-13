@@ -45,12 +45,28 @@ func OpKK(op uint16) uint16 {
 	return op & 0xff
 }
 
-func OpNr0(op uint16, r *Registers, m *Memory) error {
+func OpNr0(op uint16, r *Registers, m *Memory, d Display) error {
 	if OpNr(op) != 0 {
 		return &OpError{"Wrong OpNr", op, *r}
 	}
 
-	// TODO: implementation
+	switch o := op & 0xff; o {
+	// 00E0 - CLS
+	// Clear the display.
+	case 0xe0:
+		d.Clear()
+	// 00EE - RET
+	// Return from a subroutine.
+	case 0xee:
+		if r.SP == 0 {
+			return &OpError{"SP=0, cannot return from subroutine", op, *r}
+		}
+		r.SP -= 1
+		r.PC = r.Stack[r.SP]
+	}
+	// By default it is ignored in modern interpreters
+	// 0nnn - SYS addr
+	// Jump to a machine code routine at nnn.
 
 	return nil
 }
@@ -280,12 +296,15 @@ func OpNrC(op uint16, r *Registers, m *Memory) error {
 
 // Dxyn - DRW Vx, Vy, nibble
 // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
-func OpNrD(op uint16, r *Registers, m *Memory) error {
+func OpNrD(op uint16, r *Registers, m *Memory, d Display) error {
 	if OpNr(op) != 0xd {
 		return &OpError{"Wrong OpNr", op, *r}
 	}
 
-	// TODO: implement
+	x := OpX(op)
+	y := OpY(op)
+	n := OpN(op)
+	r.V[0xf] = d.Draw(r.V[x], r.V[y], m[r.I:r.I+n])
 	return nil
 }
 
@@ -294,6 +313,8 @@ func OpNrE(op uint16, r *Registers, m *Memory) error {
 		return &OpError{"Wrong OpNr", op, *r}
 	}
 
+	return &OpError{"Not implemented", op, *r}
+
 	// Ex9E - SKP Vx
 	// Skip next instruction if key with the value of Vx is pressed.
 
@@ -301,7 +322,7 @@ func OpNrE(op uint16, r *Registers, m *Memory) error {
 	// Skip next instruction if key with the value of Vx is not pressed.
 
 	// TODO: implement
-	return nil
+	//return nil
 }
 
 func OpNrF(op uint16, r *Registers, m *Memory) error {
@@ -320,6 +341,7 @@ func OpNrF(op uint16, r *Registers, m *Memory) error {
 	case 0x0a:
 		// TODO: implement
 		// TODO: stop all execution here
+		return &OpError{"Not implemented", op, *r}
 	// Fx15 - LD DT, Vx
 	// Set delay timer = Vx.
 	case 0x15:
@@ -335,7 +357,8 @@ func OpNrF(op uint16, r *Registers, m *Memory) error {
 	// Fx29 - LD F, Vx
 	// Set I = location of sprite for digit Vx.
 	case 0x29:
-		// TODO: implement
+		// each hex sprite is 5 bytes long
+		r.I = uint16(r.V[x]) * 5
 	// Fx33 - LD B, Vx
 	// Store BCD representation of Vx in memory locations I, I+1, and I+2.
 	case 0x33:
