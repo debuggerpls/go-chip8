@@ -314,7 +314,7 @@ func OpNrF(op uint16, r *Registers, m *Memory) error {
 	// Fx07 - LD Vx, DT
 	// Set Vx = delay timer value.
 	case 0x07:
-		r.V[x] = r.D
+		r.V[x] = r.DT
 	// Fx0A - LD Vx, K
 	// Wait for a key press, store the value of the key in Vx.
 	case 0x0a:
@@ -323,11 +323,11 @@ func OpNrF(op uint16, r *Registers, m *Memory) error {
 	// Fx15 - LD DT, Vx
 	// Set delay timer = Vx.
 	case 0x15:
-		r.D = r.V[x]
+		r.DT = r.V[x]
 	// Fx18 - LD ST, Vx
 	// Set sound timer = Vx.
 	case 0x18:
-		r.S = r.V[x]
+		r.ST = r.V[x]
 	// Fx1E - ADD I, Vx
 	// Set I = I + Vx.
 	case 0x1e:

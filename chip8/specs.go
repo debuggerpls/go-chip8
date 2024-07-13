@@ -11,8 +11,8 @@ type Registers struct {
 	V [16]byte
 	I uint16
 	// special purpose
-	D byte // delay
-	S byte // sound
+	DT byte // delay timer
+	ST byte // sound timer
 	// pseudo-registers
 	PC    uint16     // program counter
 	SP    byte       // stack pointer
@@ -31,7 +31,7 @@ func (r *Registers) String() string {
 		}
 	}
 
-	fmt.Fprintf(&b, "D=%02x; S=%02x\n", r.D, r.S)
+	fmt.Fprintf(&b, "DT=%02x; ST=%02x\n", r.DT, r.ST)
 
 	return b.String()
 }

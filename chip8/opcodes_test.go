@@ -344,8 +344,8 @@ func TestOpNrF(t *testing.T) {
 	m := Memory{}
 
 	var opcode uint16 = 0xf007
-	r.D = 0xa
-	expected := r.D
+	r.DT = 0xa
+	expected := r.DT
 	if err := OpNrF(opcode, &r, &m); err != nil {
 		t.Error(err)
 	}
@@ -355,23 +355,23 @@ func TestOpNrF(t *testing.T) {
 
 	opcode = 0xf015
 	r.V[0] = 0xa
-	r.D = 0
+	r.DT = 0
 	expected = r.V[0]
 	if err := OpNrF(opcode, &r, &m); err != nil {
 		t.Error(err)
 	}
-	if r.D != expected {
-		t.Errorf("Wrong D, expected=%04x\n%s", expected, r.String())
+	if r.DT != expected {
+		t.Errorf("Wrong DT, expected=%04x\n%s", expected, r.String())
 	}
 
 	opcode = 0xf018
 	r.V[0] = 0xa
-	r.S = 0
+	r.ST = 0
 	expected = r.V[0]
 	if err := OpNrF(opcode, &r, &m); err != nil {
 		t.Error(err)
 	}
-	if r.S != expected {
+	if r.ST != expected {
 		t.Errorf("Wrong S, expected=%04x\n%s", expected, r.String())
 	}
 
