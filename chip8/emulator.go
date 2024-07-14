@@ -1,6 +1,8 @@
 package chip8
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Emulator struct {
 	isInit    bool
@@ -62,7 +64,8 @@ func (e *Emulator) Step() error {
 	// execute opcode
 	var opcode uint16 = (uint16(e.memory[e.registers.PC]) << 8) | uint16(e.memory[e.registers.PC+1])
 	var err error = nil
-	switch OpNr(opcode) {
+	opnr := OpNr(opcode)
+	switch opnr {
 	case 0:
 		err = OpNr0(opcode, &e.registers, &e.memory, e.display)
 	case 1:
@@ -102,6 +105,13 @@ func (e *Emulator) Step() error {
 	}
 
 	e.display.Update()
+	// FIXME: is this ok?
+	if opnr == 1 || opnr == 2 || opnr == 0xb {
+		// flow type opcodes thus no PC increase
+		// TODO: should 00EE and 2NNN also be included here?
+		return err
+	}
+
 	if e.registers.PC += 2; e.registers.PC >= uint16(len(e.memory)) {
 		err = EmulatorError{fmt.Sprintf("PC out of memory bounds")}
 	}
@@ -112,6 +122,7 @@ func (e *Emulator) Run() error {
 	var err error = nil
 	for err == nil {
 		err = e.Step()
+		// time.Sleep(time.Millisecond * 200)
 	}
 	return err
 }

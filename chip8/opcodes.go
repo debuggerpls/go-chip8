@@ -1,5 +1,28 @@
 package chip8
 
+// TODO: failing opcodes
+// AX
+// F5
+// F3
+// 1XX
+// spacing wrong
+
+// fixed:
+// F55
+// F3
+// F65
+// 1NNN
+//
+// left:
+// ANNN
+// 00EE?
+// 2NNN?
+// BNNN?
+// collision not working properly
+// Framed2 seems to not work lines
+// Framed1 seems to be too long?
+// Check against chip8 implementation from others
+
 import (
 	"fmt"
 	"math/rand"
@@ -61,8 +84,8 @@ func OpNr0(op uint16, r *Registers, m *Memory, d Display) error {
 		if r.SP == 0 {
 			return &OpError{"SP=0, cannot return from subroutine", op, r}
 		}
-		r.SP -= 1
 		r.PC = r.Stack[r.SP]
+		r.SP--
 	}
 	// By default it is ignored in modern interpreters
 	// 0nnn - SYS addr
@@ -89,8 +112,8 @@ func OpNr2(op uint16, r *Registers, m *Memory) error {
 		return &OpError{"Wrong OpNr", op, r}
 	}
 
+	r.SP++
 	r.Stack[r.SP] = r.PC
-	r.SP += 1
 	r.PC = OpNNN(op)
 	return nil
 }
@@ -369,21 +392,21 @@ func OpNrF(op uint16, r *Registers, m *Memory) error {
 		i := r.I
 		vx := r.V[x]
 		m[i+2] = vx % 10
-		m[i+1] = (vx - m[i+2]) % 100
-		m[i] = vx - m[i+1] - m[i+2]
+		m[i+1] = ((vx - m[i+2]) % 100) / 10
+		m[i] = (vx - m[i+1] - m[i+2]) / 100
 	// Fx55 - LD [I], Vx
 	// Store registers V0 through Vx in memory starting at location I.
 	case 0x55:
 		i := r.I
-		for index, v := range r.V {
-			m[i+uint16(index)] = v
+		for j := uint16(0); j <= x; j++ {
+			m[i+j] = r.V[j]
 		}
 	// Fx65 - LD Vx, [I]
 	// Read registers V0 through Vx from memory starting at location I.
 	case 0x65:
 		i := r.I
-		for index, _ := range r.V {
-			r.V[index] = m[i+uint16(index)]
+		for j := uint16(0); j <= x; j++ {
+			r.V[j] = m[i+j]
 		}
 	default:
 		return &OpError{"Unknown opcode", op, r}

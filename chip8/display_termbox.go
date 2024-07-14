@@ -5,7 +5,9 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
-type DisplayTermbox struct{}
+type DisplayTermbox struct {
+	buffer [DisplayHeigth][DisplayWidth]bool
+}
 type KeyboardTermbox struct{}
 
 func (d *DisplayTermbox) Init() error {
@@ -24,16 +26,30 @@ func (d *DisplayTermbox) Update() {
 	termbox.Flush()
 }
 
+func bgColor(set bool) termbox.Attribute {
+	if set {
+		return termbox.ColorWhite
+	} else {
+		return termbox.ColorBlack
+	}
+}
+
 func (d *DisplayTermbox) Draw(x, y byte, sprite []byte) (collision byte) {
 	// TODO: implement collision and XOR, check for boundaries
 	for i, v := range sprite {
 		for j := 7; j >= 0; j-- {
-			set := (v >> j) & 1
-			if set == 1 {
-				termbox.SetCell(int(x)+7-j, int(y)+i, ' ', termbox.ColorBlack, termbox.ColorWhite)
-			} else {
-				termbox.SetCell(int(x)+7-j, int(y)+i, ' ', termbox.ColorBlack, termbox.ColorBlack)
+			set := ((v >> j) & 1) == 1
+			xi, yi := int(x)+7-j, int(y)+i
+			xi, yi = xi%int(DisplayWidth), yi%int(DisplayHeigth)
+			old := d.buffer[yi][xi]
+			set = set != old
+			if !set && old {
+				// collision only set on erased pixels
+				collision = collision | 1
 			}
+			termbox.SetCell(xi, yi, ' ', bgColor(set), bgColor(set))
+			// FIXME: is this OK?
+			d.buffer[yi][xi] = set
 		}
 	}
 
