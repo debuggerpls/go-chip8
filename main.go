@@ -3,22 +3,22 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/debuggerpls/go-chip8/chip8"
 )
 
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
 func main() {
+	if len(os.Args) < 2 {
+		fmt.Printf("Missing argument: CHIP8_PROGRAM\n")
+		os.Exit(1)
+	}
+
 	// TODO: use Reader like bufio or io?
-	data, err := os.ReadFile("/home/debuggerpls/go/src/github.com/debuggerpls/go-chip8/test_opcode.ch8")
-	//data, err := os.ReadFile("/home/debuggerpls/go/src/github.com/debuggerpls/go-chip8/heart_monitor.ch8")
-	check(err)
+	data, err := os.ReadFile(os.Args[1])
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	emulator := chip8.Create(&chip8.DisplayTermbox{})
 
@@ -27,6 +27,4 @@ func main() {
 	err = emulator.Run()
 	emulator.Destroy()
 	fmt.Println("ERROR:", err.Error())
-
-	time.Sleep(time.Second)
 }
