@@ -25,10 +25,11 @@ const (
 )
 
 type Display interface {
-	Create() error
-	Destroy()
-	Clear()
-	Draw(x, y byte, sprite []byte) (collision byte)
+	Create() error                                  // create and initialize
+	Destroy()                                       // close and destry
+	Clear()                                         // clear screen
+	Draw(x, y byte, sprite []byte) (collision byte) // draw sprite
+	Update()                                        // update/flush/sync screen
 }
 
 func (r *Registers) String() string {

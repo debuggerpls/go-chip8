@@ -21,6 +21,9 @@ func (d *MockDisplay) Clear() {
 	d.clear += 1
 }
 
+func (d *MockDisplay) Update() {
+}
+
 func (d *MockDisplay) Draw(x, y byte, sprite []byte) (collision byte) {
 	d.x = x
 	d.y = y
