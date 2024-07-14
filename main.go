@@ -24,7 +24,7 @@ func main() {
 
 	emulator.LoadProgram(data)
 
-	emulator.Run()
+	err = emulator.Run()
 
 	time.Sleep(time.Second)
 }
