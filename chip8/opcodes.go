@@ -8,7 +8,7 @@ import (
 type OpError struct {
 	what      string
 	opcode    uint16
-	registers Registers
+	registers *Registers
 }
 
 func (err *OpError) Error() string {
@@ -47,7 +47,7 @@ func OpKK(op uint16) uint16 {
 
 func OpNr0(op uint16, r *Registers, m *Memory, d Display) error {
 	if OpNr(op) != 0 {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	switch o := op & 0xff; o {
@@ -59,7 +59,7 @@ func OpNr0(op uint16, r *Registers, m *Memory, d Display) error {
 	// Return from a subroutine.
 	case 0xee:
 		if r.SP == 0 {
-			return &OpError{"SP=0, cannot return from subroutine", op, *r}
+			return &OpError{"SP=0, cannot return from subroutine", op, r}
 		}
 		r.SP -= 1
 		r.PC = r.Stack[r.SP]
@@ -75,7 +75,7 @@ func OpNr0(op uint16, r *Registers, m *Memory, d Display) error {
 // Jump to location nnn.
 func OpNr1(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 1 {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	r.PC = OpNNN(op)
@@ -86,7 +86,7 @@ func OpNr1(op uint16, r *Registers, m *Memory) error {
 // Call subroutine at nnn.
 func OpNr2(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 2 {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	r.Stack[r.SP] = r.PC
@@ -99,7 +99,7 @@ func OpNr2(op uint16, r *Registers, m *Memory) error {
 // Skip next instruction if Vx = kk.
 func OpNr3(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 3 {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	x := OpX(op)
@@ -114,7 +114,7 @@ func OpNr3(op uint16, r *Registers, m *Memory) error {
 // Skip next instruction if Vx != kk.
 func OpNr4(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 4 {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	x := OpX(op)
@@ -129,7 +129,7 @@ func OpNr4(op uint16, r *Registers, m *Memory) error {
 // Skip next instruction if Vx = Vy.
 func OpNr5(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 5 {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	x := OpX(op)
@@ -144,7 +144,7 @@ func OpNr5(op uint16, r *Registers, m *Memory) error {
 // Set Vx = kk.
 func OpNr6(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 6 {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	x := OpX(op)
@@ -157,7 +157,7 @@ func OpNr6(op uint16, r *Registers, m *Memory) error {
 // Set Vx = Vx + kk.
 func OpNr7(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 7 {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	x := OpX(op)
@@ -168,7 +168,7 @@ func OpNr7(op uint16, r *Registers, m *Memory) error {
 
 func OpNr8(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 8 {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	x := OpX(op)
@@ -238,7 +238,7 @@ func OpNr8(op uint16, r *Registers, m *Memory) error {
 		}
 		r.V[x] = r.V[x] * 2
 	default:
-		return &OpError{"Unknown nibble n", op, *r}
+		return &OpError{"Unknown nibble n", op, r}
 	}
 
 	return nil
@@ -248,7 +248,7 @@ func OpNr8(op uint16, r *Registers, m *Memory) error {
 // Skip next instruction if Vx != Vy.
 func OpNr9(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 9 {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	x := OpX(op)
@@ -263,7 +263,7 @@ func OpNr9(op uint16, r *Registers, m *Memory) error {
 // Set I = nnn.
 func OpNrA(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 0xa {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	r.I = OpNNN(op)
@@ -274,7 +274,7 @@ func OpNrA(op uint16, r *Registers, m *Memory) error {
 // Jump to location nnn + V0.
 func OpNrB(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 0xb {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	r.PC = OpNNN(op) + uint16(r.V[0])
@@ -285,7 +285,7 @@ func OpNrB(op uint16, r *Registers, m *Memory) error {
 // Set Vx = random byte AND kk.
 func OpNrC(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 0xc {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	x := OpX(op)
@@ -298,7 +298,7 @@ func OpNrC(op uint16, r *Registers, m *Memory) error {
 // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
 func OpNrD(op uint16, r *Registers, m *Memory, d Display) error {
 	if OpNr(op) != 0xd {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	x := OpX(op)
@@ -310,10 +310,10 @@ func OpNrD(op uint16, r *Registers, m *Memory, d Display) error {
 
 func OpNrE(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 0xe {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
-	return &OpError{"Not implemented", op, *r}
+	return &OpError{"Not implemented", op, r}
 
 	// Ex9E - SKP Vx
 	// Skip next instruction if key with the value of Vx is pressed.
@@ -327,7 +327,7 @@ func OpNrE(op uint16, r *Registers, m *Memory) error {
 
 func OpNrF(op uint16, r *Registers, m *Memory) error {
 	if OpNr(op) != 0xf {
-		return &OpError{"Wrong OpNr", op, *r}
+		return &OpError{"Wrong OpNr", op, r}
 	}
 
 	x := OpX(op)
@@ -335,21 +335,25 @@ func OpNrF(op uint16, r *Registers, m *Memory) error {
 	// Fx07 - LD Vx, DT
 	// Set Vx = delay timer value.
 	case 0x07:
-		r.V[x] = r.DT
+		r.V[x] = r.DT.Value()
 	// Fx0A - LD Vx, K
 	// Wait for a key press, store the value of the key in Vx.
 	case 0x0a:
 		// TODO: implement
 		// TODO: stop all execution here
-		return &OpError{"Not implemented", op, *r}
+		return &OpError{"Not implemented", op, r}
 	// Fx15 - LD DT, Vx
 	// Set delay timer = Vx.
 	case 0x15:
-		r.DT = r.V[x]
+		if r.DT.Set(r.V[x]) > 0 {
+			go Start60HzTimer(&r.DT)
+		}
 	// Fx18 - LD ST, Vx
 	// Set sound timer = Vx.
 	case 0x18:
-		r.ST = r.V[x]
+		if r.ST.Set(r.V[x]) > 0 {
+			go Start60HzTimer(&r.ST)
+		}
 	// Fx1E - ADD I, Vx
 	// Set I = I + Vx.
 	case 0x1e:
@@ -382,7 +386,7 @@ func OpNrF(op uint16, r *Registers, m *Memory) error {
 			r.V[index] = m[i+uint16(index)]
 		}
 	default:
-		return &OpError{"Unknown nibble n", op, *r}
+		return &OpError{"Unknown opcode", op, r}
 	}
 	return nil
 }

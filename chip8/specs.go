@@ -3,6 +3,8 @@ package chip8
 import (
 	"fmt"
 	"strings"
+	"sync"
+	"time"
 )
 
 type Memory [4096]byte
@@ -11,12 +13,49 @@ type Registers struct {
 	V [16]byte
 	I uint16
 	// special purpose
-	DT byte // delay timer
-	ST byte // sound timer
+	DT TimerRegister // delay timer
+	ST TimerRegister // sound timer
 	// pseudo-registers
 	PC    uint16     // program counter
 	SP    byte       // stack pointer
 	Stack [16]uint16 // stack
+}
+
+type TimerRegister struct {
+	mut   sync.Mutex
+	value byte
+}
+
+func (r *TimerRegister) Value() byte {
+	r.mut.Lock()
+	defer r.mut.Unlock()
+	return r.value
+}
+
+// decrease register's value and return it
+func (r *TimerRegister) Dec() byte {
+	r.mut.Lock()
+	defer r.mut.Unlock()
+	r.value -= 1
+	return r.value
+}
+
+func (r *TimerRegister) Set(value byte) byte {
+	r.mut.Lock()
+	defer r.mut.Unlock()
+	r.value = value
+	return r.value
+}
+
+// NOTE: this should be called as go-routine
+func Start60HzTimer(r *TimerRegister) {
+	tick := time.NewTicker(time.Second / 60)
+	val := r.Value()
+	for val > 0 {
+		<-tick.C
+		val = r.Dec()
+	}
+	tick.Stop()
 }
 
 const (
@@ -25,11 +64,17 @@ const (
 )
 
 type Display interface {
-	Create() error                                  // create and initialize
-	Destroy()                                       // close and destry
+	Init() error                                    // create and initialize
+	Close()                                         // close and destry
 	Clear()                                         // clear screen
 	Draw(x, y byte, sprite []byte) (collision byte) // draw sprite
 	Update()                                        // update/flush/sync screen
+}
+
+type Keyboard interface {
+	Init() error
+	Close()
+	WaitForEvent()
 }
 
 func (r *Registers) String() string {

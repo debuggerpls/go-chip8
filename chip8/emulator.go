@@ -3,9 +3,11 @@ package chip8
 import "fmt"
 
 type Emulator struct {
+	isInit    bool
 	memory    Memory
 	registers Registers
 	display   Display
+	keyboard  Keyboard
 }
 
 type EmulatorError struct {
@@ -16,28 +18,44 @@ func (e EmulatorError) Error() string {
 	return fmt.Sprint(e.what)
 }
 
-// create emulator with provided display
-func Create(display Display) Emulator {
-	var emulator Emulator
+func (emulator *Emulator) Init(display Display, keyboard Keyboard) error {
+	if emulator.isInit {
+		return nil
+	}
 
 	emulator.memory.LoadHexSprites()
 
 	emulator.registers.PC = 0x200
 
-	if display != nil {
-		emulator.display = display
-		if err := emulator.display.Create(); err != nil {
-			panic(err)
-		}
+	if display == nil {
+		return EmulatorError{"display == nil!"}
+	}
+	emulator.display = display
+
+	if keyboard == nil {
+		return EmulatorError{"display == nil!"}
+	}
+	emulator.keyboard = keyboard
+
+	if err := emulator.display.Init(); err != nil {
+		return err
+	}
+	if err := emulator.keyboard.Init(); err != nil {
+		return err
 	}
 
-	return emulator
+	emulator.isInit = true
+	return nil
 }
 
-func (e *Emulator) Destroy() {
-	if e.display != nil {
-		e.display.Destroy()
+func (e *Emulator) Close() {
+	if !e.isInit {
+		return
 	}
+	e.keyboard.WaitForEvent()
+	e.display.Close()
+	e.keyboard.Close()
+	e.isInit = false
 }
 
 func (e *Emulator) Step() error {

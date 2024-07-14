@@ -20,11 +20,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	emulator := chip8.Create(&chip8.DisplayTermbox{})
+	emulator := chip8.Emulator{}
+	err = emulator.Init(&chip8.DisplayTermbox{}, &chip8.KeyboardTermbox{})
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
 	emulator.LoadProgram(data)
-
 	err = emulator.Run()
-	emulator.Destroy()
+	emulator.Close()
 	fmt.Println("ERROR:", err.Error())
 }

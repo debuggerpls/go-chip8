@@ -6,15 +6,13 @@ import (
 )
 
 type DisplayTermbox struct{}
+type KeyboardTermbox struct{}
 
-func (d *DisplayTermbox) Create() error {
-	if err := termbox.Init(); err != nil {
-		return err
-	}
-	return nil
+func (d *DisplayTermbox) Init() error {
+	return termbox.Init()
 }
 
-func (d *DisplayTermbox) Destroy() {
+func (d *DisplayTermbox) Close() {
 	termbox.Close()
 }
 
@@ -60,4 +58,16 @@ func tbdraw(x, y int, sprite []byte) {
 			}
 		}
 	}
+}
+
+func (k *KeyboardTermbox) Init() error {
+	return termbox.Init()
+}
+
+func (k *KeyboardTermbox) Close() {
+	termbox.Close()
+}
+
+func (k *KeyboardTermbox) WaitForEvent() {
+	termbox.PollEvent()
 }
