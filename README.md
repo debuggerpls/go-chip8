@@ -5,14 +5,14 @@ termbox is used for default implementation for graphics and input.
 
 ## Architecture
 Struct that contains the internals of CHIP-8 emulator.
-Chip8VM
+Emulator
   - CPU - contains
   - Memory
   - Graphics (interarface)
   - Input (interface)
 
 CLIs:
-  - chip8_vm : run CHIP-8 programs
+  - chip8 : CHIP-8 emulator that can run binaries
   - TODO: disassembler
 
 ## References
