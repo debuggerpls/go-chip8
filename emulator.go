@@ -111,8 +111,6 @@ func (e *Emulator) Run() error {
 	return err
 }
 
-func (e *Emulator) LoadProgram(b []byte) {
-	for i, v := range b {
-		e.Memory[0x200+i] = v
-	}
+func (e *Emulator) LoadProgram(b []byte) error {
+	return e.Memory.Load(0x200, b)
 }
