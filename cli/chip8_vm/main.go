@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/debuggerpls/go-chip8/chip8"
+	"github.com/debuggerpls/go-chip8"
 )
 
 func main() {
