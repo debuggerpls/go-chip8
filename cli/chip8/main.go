@@ -13,7 +13,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// TODO: use Reader like bufio or io?
 	data, err := os.ReadFile(os.Args[1])
 	if err != nil {
 		fmt.Println(err)

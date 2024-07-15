@@ -45,7 +45,6 @@ func (e *Emulator) Close() {
 }
 
 func (e *Emulator) Step() error {
-	// execute opcode
 	opcode := e.CPU.fetch(&e.Memory)
 	if err := e.CPU.execute(opcode, e); err != nil {
 		return err
