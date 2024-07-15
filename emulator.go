@@ -1,5 +1,7 @@
 package chip8
 
+import "time"
+
 type Emulator struct {
 	isInit   bool
 	CPU      CPU
@@ -44,23 +46,38 @@ func (e *Emulator) Close() {
 	e.isInit = false
 }
 
-func (e *Emulator) Step() error {
+func (e *Emulator) Step(delayTick bool) error {
 	opcode := e.CPU.fetch(&e.Memory)
 	if err := e.CPU.execute(opcode, e); err != nil {
 		return err
 	}
-
-	e.Graphics.Update()
+	if delayTick {
+		e.CPU.delayTick()
+	}
 
 	return nil
 }
 
 func (e *Emulator) Run() error {
+	// ~600Hz
+	processor_tick := time.NewTicker(time.Second / 600)
+	// 60Hz for timers
+	delay_tick := time.NewTicker(time.Second / 60)
+	delay := false
 	var err error = nil
+
 	for err == nil {
-		err = e.Step()
-		// time.Sleep(time.Millisecond * 200)
+		<-processor_tick.C
+		err = e.Step(delay)
+		select {
+		case <-delay_tick.C:
+			delay = true
+		default:
+			delay = false
+		}
 	}
+	delay_tick.Stop()
+	processor_tick.Stop()
 	return err
 }
 

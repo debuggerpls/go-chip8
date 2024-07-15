@@ -63,7 +63,6 @@ func (cpu *CPU) execute(opcode uint16, e *Emulator) error {
 
 	if opnr == 1 || opnr == 2 || opnr == 0xb {
 		// flow type opcodes thus no PC increase
-		// TODO: should 00EE and 2NNN also be included here?
 		return err
 	}
 
@@ -71,6 +70,15 @@ func (cpu *CPU) execute(opcode uint16, e *Emulator) error {
 		err = ErrOutOfBounds{"PC out of bounds"}
 	}
 	return err
+}
+
+func (cpu *CPU) delayTick() {
+	if cpu.DT > 0 {
+		cpu.DT--
+	}
+	if cpu.ST > 0 {
+		cpu.ST--
+	}
 }
 
 func (cpu *CPU) Init() error {

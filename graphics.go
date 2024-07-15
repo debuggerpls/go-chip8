@@ -10,5 +10,4 @@ type Graphics interface {
 	Close()
 	Clear()
 	Draw(x, y byte, sprite []byte) (collision byte)
-	Update()
 }

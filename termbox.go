@@ -22,10 +22,6 @@ func (d *GraphicsTermbox) Clear() {
 	termbox.Clear(termbox.ColorBlack, termbox.ColorBlack)
 }
 
-func (d *GraphicsTermbox) Update() {
-	termbox.Flush()
-}
-
 func bgColor(set bool) termbox.Attribute {
 	if set {
 		return termbox.ColorWhite
@@ -53,7 +49,9 @@ func (d *GraphicsTermbox) Draw(x, y byte, sprite []byte) (collision byte) {
 		}
 	}
 
-	return 0
+	termbox.Flush()
+
+	return collision
 }
 
 func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
