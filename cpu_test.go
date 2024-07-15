@@ -60,7 +60,7 @@ func TestOpFuncs(t *testing.T) {
 }
 
 func TestOpNr0(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 	d := &MockDisplay{}
 	var opcode uint16 = 0x0000
@@ -92,7 +92,7 @@ func TestOpNr0(t *testing.T) {
 }
 
 func TestOpNr1(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 	var opcode uint16 = 0x1abc
 
@@ -105,7 +105,7 @@ func TestOpNr1(t *testing.T) {
 }
 
 func TestOpNr2(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 	var opcode uint16 = 0x2abc
 
@@ -124,7 +124,7 @@ func TestOpNr2(t *testing.T) {
 }
 
 func TestOpNr3(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 	var opcode uint16 = 0x3abc
 
@@ -145,7 +145,7 @@ func TestOpNr3(t *testing.T) {
 }
 
 func TestOpNr4(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 	var opcode uint16 = 0x4abc
 
@@ -167,7 +167,7 @@ func TestOpNr4(t *testing.T) {
 }
 
 func TestOpNr5(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 	var opcode uint16 = 0x5010
 
@@ -189,7 +189,7 @@ func TestOpNr5(t *testing.T) {
 }
 
 func TestOpNr6(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 	var opcode uint16 = 0x6010
 
@@ -202,7 +202,7 @@ func TestOpNr6(t *testing.T) {
 }
 
 func TestOpNr7(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 	var opcode uint16 = 0x7010
 
@@ -221,7 +221,7 @@ func TestOpNr7(t *testing.T) {
 }
 
 func TestOpNr8(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 
 	var opcode uint16 = 0x8010
@@ -351,7 +351,7 @@ func TestOpNr8(t *testing.T) {
 }
 
 func TestOpNr9(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 	var opcode uint16 = 0x9010
 
@@ -365,7 +365,7 @@ func TestOpNr9(t *testing.T) {
 }
 
 func TestOpNrA(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 	var opcode uint16 = 0xa010
 
@@ -379,7 +379,7 @@ func TestOpNrA(t *testing.T) {
 }
 
 func TestOpNrB(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 
 	var opcode uint16 = 0xb010
@@ -394,7 +394,7 @@ func TestOpNrB(t *testing.T) {
 }
 
 func TestOpNrD(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 	d := &MockDisplay{}
 
@@ -410,7 +410,7 @@ func TestOpNrD(t *testing.T) {
 }
 
 func TestOpNrF(t *testing.T) {
-	r := Registers{}
+	r := CPU{}
 	m := Memory{}
 
 	var opcode uint16 = 0xf007

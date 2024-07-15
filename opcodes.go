@@ -28,10 +28,16 @@ import (
 	"math/rand"
 )
 
+type ErrUnknownOpcode uint16
+
+func (e ErrUnknownOpcode) Error() string {
+	return fmt.Sprintf("ErrUnknownOpcode: %04x", uint16(e))
+}
+
 type OpError struct {
 	what      string
 	opcode    uint16
-	registers *Registers
+	registers *CPU
 }
 
 func (err *OpError) Error() string {
@@ -68,7 +74,7 @@ func OpKK(op uint16) uint16 {
 	return op & 0xff
 }
 
-func OpNr0(op uint16, r *Registers, m *Memory, d Display) error {
+func OpNr0(op uint16, r *CPU, m *Memory, d Graphics) error {
 	if OpNr(op) != 0 {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -96,7 +102,7 @@ func OpNr0(op uint16, r *Registers, m *Memory, d Display) error {
 
 // 1nnn - JP addr
 // Jump to location nnn.
-func OpNr1(op uint16, r *Registers, m *Memory) error {
+func OpNr1(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 1 {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -107,7 +113,7 @@ func OpNr1(op uint16, r *Registers, m *Memory) error {
 
 // 2nnn - CALL addr
 // Call subroutine at nnn.
-func OpNr2(op uint16, r *Registers, m *Memory) error {
+func OpNr2(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 2 {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -120,7 +126,7 @@ func OpNr2(op uint16, r *Registers, m *Memory) error {
 
 // 3xkk - SE Vx, byte
 // Skip next instruction if Vx = kk.
-func OpNr3(op uint16, r *Registers, m *Memory) error {
+func OpNr3(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 3 {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -135,7 +141,7 @@ func OpNr3(op uint16, r *Registers, m *Memory) error {
 
 // 4xkk - SNE Vx, byte
 // Skip next instruction if Vx != kk.
-func OpNr4(op uint16, r *Registers, m *Memory) error {
+func OpNr4(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 4 {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -150,7 +156,7 @@ func OpNr4(op uint16, r *Registers, m *Memory) error {
 
 // 5xy0 - SE Vx, Vy
 // Skip next instruction if Vx = Vy.
-func OpNr5(op uint16, r *Registers, m *Memory) error {
+func OpNr5(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 5 {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -165,7 +171,7 @@ func OpNr5(op uint16, r *Registers, m *Memory) error {
 
 // 6xkk - LD Vx, byte
 // Set Vx = kk.
-func OpNr6(op uint16, r *Registers, m *Memory) error {
+func OpNr6(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 6 {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -178,7 +184,7 @@ func OpNr6(op uint16, r *Registers, m *Memory) error {
 
 // 7xkk - ADD Vx, byte
 // Set Vx = Vx + kk.
-func OpNr7(op uint16, r *Registers, m *Memory) error {
+func OpNr7(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 7 {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -189,7 +195,7 @@ func OpNr7(op uint16, r *Registers, m *Memory) error {
 	return nil
 }
 
-func OpNr8(op uint16, r *Registers, m *Memory) error {
+func OpNr8(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 8 {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -269,7 +275,7 @@ func OpNr8(op uint16, r *Registers, m *Memory) error {
 
 // 9xy0 - SNE Vx, Vy
 // Skip next instruction if Vx != Vy.
-func OpNr9(op uint16, r *Registers, m *Memory) error {
+func OpNr9(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 9 {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -284,7 +290,7 @@ func OpNr9(op uint16, r *Registers, m *Memory) error {
 
 // Annn - LD I, addr
 // Set I = nnn.
-func OpNrA(op uint16, r *Registers, m *Memory) error {
+func OpNrA(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 0xa {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -295,7 +301,7 @@ func OpNrA(op uint16, r *Registers, m *Memory) error {
 
 // Bnnn - JP V0, addr
 // Jump to location nnn + V0.
-func OpNrB(op uint16, r *Registers, m *Memory) error {
+func OpNrB(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 0xb {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -306,7 +312,7 @@ func OpNrB(op uint16, r *Registers, m *Memory) error {
 
 // Cxkk - RND Vx, byte
 // Set Vx = random byte AND kk.
-func OpNrC(op uint16, r *Registers, m *Memory) error {
+func OpNrC(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 0xc {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -319,7 +325,7 @@ func OpNrC(op uint16, r *Registers, m *Memory) error {
 
 // Dxyn - DRW Vx, Vy, nibble
 // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
-func OpNrD(op uint16, r *Registers, m *Memory, d Display) error {
+func OpNrD(op uint16, r *CPU, m *Memory, d Graphics) error {
 	if OpNr(op) != 0xd {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -331,7 +337,7 @@ func OpNrD(op uint16, r *Registers, m *Memory, d Display) error {
 	return nil
 }
 
-func OpNrE(op uint16, r *Registers, m *Memory) error {
+func OpNrE(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 0xe {
 		return &OpError{"Wrong OpNr", op, r}
 	}
@@ -348,7 +354,7 @@ func OpNrE(op uint16, r *Registers, m *Memory) error {
 	//return nil
 }
 
-func OpNrF(op uint16, r *Registers, m *Memory) error {
+func OpNrF(op uint16, r *CPU, m *Memory) error {
 	if OpNr(op) != 0xf {
 		return &OpError{"Wrong OpNr", op, r}
 	}

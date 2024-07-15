@@ -1,110 +1,94 @@
 package chip8
 
-import (
-	"fmt"
-)
-
 type Emulator struct {
-	isInit    bool
-	memory    Memory
-	registers Registers
-	display   Display
-	keyboard  Keyboard
+	isInit   bool
+	CPU      CPU
+	Memory   Memory
+	Graphics Graphics
+	Input    Input
 }
 
-type EmulatorError struct {
-	what string
+func CreateDefaultEmulator() (*Emulator, error) {
+	return CreateEmulator(&GraphicsTermbox{}, &InputTermbox{})
 }
 
-func (e EmulatorError) Error() string {
-	return fmt.Sprint(e.what)
-}
-
-func (emulator *Emulator) Init(display Display, keyboard Keyboard) error {
-	if emulator.isInit {
-		return nil
+func CreateEmulator(graphics Graphics, input Input) (*Emulator, error) {
+	emulator := &Emulator{
+		Graphics: graphics,
+		Input:    input,
 	}
-
-	emulator.memory.LoadHexSprites()
-
-	emulator.registers.PC = 0x200
-
-	if display == nil {
-		return EmulatorError{"display == nil!"}
+	if err := emulator.Graphics.Init(); err != nil {
+		return nil, err
 	}
-	emulator.display = display
-
-	if keyboard == nil {
-		return EmulatorError{"display == nil!"}
+	if err := emulator.Input.Init(); err != nil {
+		return nil, err
 	}
-	emulator.keyboard = keyboard
-
-	if err := emulator.display.Init(); err != nil {
-		return err
+	if err := emulator.Memory.Init(); err != nil {
+		return nil, err
 	}
-	if err := emulator.keyboard.Init(); err != nil {
-		return err
+	if err := emulator.CPU.Init(); err != nil {
+		return nil, err
 	}
 
 	emulator.isInit = true
-	return nil
+	return emulator, nil
 }
 
 func (e *Emulator) Close() {
 	if !e.isInit {
 		return
 	}
-	e.keyboard.WaitForEvent()
-	e.display.Close()
-	e.keyboard.Close()
+	e.Input.WaitForEvent()
+	e.Graphics.Close()
+	e.Input.Close()
 	e.isInit = false
 }
 
 func (e *Emulator) Step() error {
 	// execute opcode
-	var opcode uint16 = (uint16(e.memory[e.registers.PC]) << 8) | uint16(e.memory[e.registers.PC+1])
+	var opcode uint16 = (uint16(e.Memory[e.CPU.PC]) << 8) | uint16(e.Memory[e.CPU.PC+1])
 	var err error = nil
 	opnr := OpNr(opcode)
 	switch opnr {
 	case 0:
-		err = OpNr0(opcode, &e.registers, &e.memory, e.display)
+		err = OpNr0(opcode, &e.CPU, &e.Memory, e.Graphics)
 	case 1:
-		err = OpNr1(opcode, &e.registers, &e.memory)
+		err = OpNr1(opcode, &e.CPU, &e.Memory)
 	case 2:
-		err = OpNr2(opcode, &e.registers, &e.memory)
+		err = OpNr2(opcode, &e.CPU, &e.Memory)
 	case 3:
-		err = OpNr3(opcode, &e.registers, &e.memory)
+		err = OpNr3(opcode, &e.CPU, &e.Memory)
 	case 4:
-		err = OpNr4(opcode, &e.registers, &e.memory)
+		err = OpNr4(opcode, &e.CPU, &e.Memory)
 	case 5:
-		err = OpNr5(opcode, &e.registers, &e.memory)
+		err = OpNr5(opcode, &e.CPU, &e.Memory)
 	case 6:
-		err = OpNr6(opcode, &e.registers, &e.memory)
+		err = OpNr6(opcode, &e.CPU, &e.Memory)
 	case 7:
-		err = OpNr7(opcode, &e.registers, &e.memory)
+		err = OpNr7(opcode, &e.CPU, &e.Memory)
 	case 8:
-		err = OpNr8(opcode, &e.registers, &e.memory)
+		err = OpNr8(opcode, &e.CPU, &e.Memory)
 	case 9:
-		err = OpNr9(opcode, &e.registers, &e.memory)
+		err = OpNr9(opcode, &e.CPU, &e.Memory)
 	case 0xa:
-		err = OpNrA(opcode, &e.registers, &e.memory)
+		err = OpNrA(opcode, &e.CPU, &e.Memory)
 	case 0xb:
-		err = OpNrB(opcode, &e.registers, &e.memory)
+		err = OpNrB(opcode, &e.CPU, &e.Memory)
 	case 0xc:
-		err = OpNrC(opcode, &e.registers, &e.memory)
+		err = OpNrC(opcode, &e.CPU, &e.Memory)
 	case 0xd:
-		err = OpNrD(opcode, &e.registers, &e.memory, e.display)
+		err = OpNrD(opcode, &e.CPU, &e.Memory, e.Graphics)
 	case 0xf:
-		err = OpNrF(opcode, &e.registers, &e.memory)
+		err = OpNrF(opcode, &e.CPU, &e.Memory)
 	default:
-		err = EmulatorError{fmt.Sprintf("Unknown opcode %04x", opcode)}
+		err = ErrUnknownOpcode(opcode)
 	}
 
 	if err != nil {
 		return err
 	}
 
-	e.display.Update()
+	e.Graphics.Update()
 	// FIXME: is this ok?
 	if opnr == 1 || opnr == 2 || opnr == 0xb {
 		// flow type opcodes thus no PC increase
@@ -112,8 +96,8 @@ func (e *Emulator) Step() error {
 		return err
 	}
 
-	if e.registers.PC += 2; e.registers.PC >= uint16(len(e.memory)) {
-		err = EmulatorError{fmt.Sprintf("PC out of memory bounds")}
+	if e.CPU.PC += 2; e.CPU.PC >= uint16(len(e.Memory)) {
+		err = ErrOutOfBounds{"PC out of bounds"}
 	}
 	return err
 }
@@ -129,6 +113,6 @@ func (e *Emulator) Run() error {
 
 func (e *Emulator) LoadProgram(b []byte) {
 	for i, v := range b {
-		e.memory[0x200+i] = v
+		e.Memory[0x200+i] = v
 	}
 }

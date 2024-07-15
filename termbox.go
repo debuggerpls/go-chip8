@@ -5,24 +5,24 @@ import (
 	"github.com/nsf/termbox-go"
 )
 
-type DisplayTermbox struct {
+type GraphicsTermbox struct {
 	buffer [DisplayHeigth][DisplayWidth]bool
 }
-type KeyboardTermbox struct{}
+type InputTermbox struct{}
 
-func (d *DisplayTermbox) Init() error {
+func (d *GraphicsTermbox) Init() error {
 	return termbox.Init()
 }
 
-func (d *DisplayTermbox) Close() {
+func (d *GraphicsTermbox) Close() {
 	termbox.Close()
 }
 
-func (d *DisplayTermbox) Clear() {
+func (d *GraphicsTermbox) Clear() {
 	termbox.Clear(termbox.ColorBlack, termbox.ColorBlack)
 }
 
-func (d *DisplayTermbox) Update() {
+func (d *GraphicsTermbox) Update() {
 	termbox.Flush()
 }
 
@@ -34,7 +34,7 @@ func bgColor(set bool) termbox.Attribute {
 	}
 }
 
-func (d *DisplayTermbox) Draw(x, y byte, sprite []byte) (collision byte) {
+func (d *GraphicsTermbox) Draw(x, y byte, sprite []byte) (collision byte) {
 	// TODO: implement collision and XOR, check for boundaries
 	for i, v := range sprite {
 		for j := 7; j >= 0; j-- {
@@ -76,14 +76,14 @@ func tbdraw(x, y int, sprite []byte) {
 	}
 }
 
-func (k *KeyboardTermbox) Init() error {
+func (k *InputTermbox) Init() error {
 	return termbox.Init()
 }
 
-func (k *KeyboardTermbox) Close() {
+func (k *InputTermbox) Close() {
 	termbox.Close()
 }
 
-func (k *KeyboardTermbox) WaitForEvent() {
+func (k *InputTermbox) WaitForEvent() {
 	termbox.PollEvent()
 }
