@@ -3,18 +3,16 @@ package chip8
 import (
 	"fmt"
 	"strings"
-	"sync"
-	"time"
 )
 
 type CPU struct {
 	V     [16]byte
 	I     uint16
-	DT    TimerRegister // delay timer
-	ST    TimerRegister // sound timer
-	PC    uint16        // program counter
-	SP    byte          // stack pointer
-	Stack [16]uint16    // stack
+	DT    byte       // delay timer
+	ST    byte       // sound timer
+	PC    uint16     // program counter
+	SP    byte       // stack pointer
+	Stack [16]uint16 // stack
 }
 
 func (cpu *CPU) fetch(m *Memory) uint16 {
@@ -78,43 +76,6 @@ func (cpu *CPU) execute(opcode uint16, e *Emulator) error {
 func (cpu *CPU) Init() error {
 	cpu.PC = 0x200
 	return nil
-}
-
-type TimerRegister struct {
-	mut   sync.Mutex
-	value byte
-}
-
-func (r *TimerRegister) Value() byte {
-	r.mut.Lock()
-	defer r.mut.Unlock()
-	return r.value
-}
-
-// decrease register's value and return it
-func (r *TimerRegister) Dec() byte {
-	r.mut.Lock()
-	defer r.mut.Unlock()
-	r.value -= 1
-	return r.value
-}
-
-func (r *TimerRegister) Set(value byte) byte {
-	r.mut.Lock()
-	defer r.mut.Unlock()
-	r.value = value
-	return r.value
-}
-
-// NOTE: this should be called as go-routine
-func Start60HzTimer(r *TimerRegister) {
-	tick := time.NewTicker(time.Second / 60)
-	val := r.Value()
-	for val > 0 {
-		<-tick.C
-		val = r.Dec()
-	}
-	tick.Stop()
 }
 
 func (r *CPU) String() string {

@@ -34,6 +34,12 @@ func (e ErrUnknownOpcode) Error() string {
 	return fmt.Sprintf("ErrUnknownOpcode: %04x", uint16(e))
 }
 
+type ErrOpcodeNotImplemented uint16
+
+func (e ErrOpcodeNotImplemented) Error() string {
+	return fmt.Sprintf("ErrOpcodeNotImplemented: %04x", uint16(e))
+}
+
 type OpError struct {
 	what      string
 	opcode    uint16
@@ -267,7 +273,7 @@ func OpNr8(op uint16, r *CPU, m *Memory) error {
 		}
 		r.V[x] = r.V[x] * 2
 	default:
-		return &OpError{"Unknown nibble n", op, r}
+		return ErrUnknownOpcode(op)
 	}
 
 	return nil
@@ -342,7 +348,7 @@ func OpNrE(op uint16, r *CPU, m *Memory) error {
 		return &OpError{"Wrong OpNr", op, r}
 	}
 
-	return &OpError{"Not implemented", op, r}
+	return ErrOpcodeNotImplemented(op)
 
 	// Ex9E - SKP Vx
 	// Skip next instruction if key with the value of Vx is pressed.
@@ -364,25 +370,21 @@ func OpNrF(op uint16, r *CPU, m *Memory) error {
 	// Fx07 - LD Vx, DT
 	// Set Vx = delay timer value.
 	case 0x07:
-		r.V[x] = r.DT.Value()
+		r.V[x] = r.DT
 	// Fx0A - LD Vx, K
 	// Wait for a key press, store the value of the key in Vx.
 	case 0x0a:
 		// TODO: implement
 		// TODO: stop all execution here
-		return &OpError{"Not implemented", op, r}
+		return ErrOpcodeNotImplemented(op)
 	// Fx15 - LD DT, Vx
 	// Set delay timer = Vx.
 	case 0x15:
-		if r.DT.Set(r.V[x]) > 0 {
-			go Start60HzTimer(&r.DT)
-		}
+		r.DT = r.V[x]
 	// Fx18 - LD ST, Vx
 	// Set sound timer = Vx.
 	case 0x18:
-		if r.ST.Set(r.V[x]) > 0 {
-			go Start60HzTimer(&r.ST)
-		}
+		r.ST = r.V[x]
 	// Fx1E - ADD I, Vx
 	// Set I = I + Vx.
 	case 0x1e:
@@ -415,7 +417,7 @@ func OpNrF(op uint16, r *CPU, m *Memory) error {
 			r.V[j] = m[i+j]
 		}
 	default:
-		return &OpError{"Unknown opcode", op, r}
+		return ErrUnknownOpcode(op)
 	}
 	return nil
 }
